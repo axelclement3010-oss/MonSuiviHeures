@@ -137,6 +137,12 @@ nav.tabs{background:#1a2130f2}nav.tabs button{color:#98a2b8}
 .print-only{display:none}
 @media print{header.top,nav.tabs,.no-print,.toast{display:none!important}.view{display:none!important}#v-report{display:block!important}.card{box-shadow:none;break-inside:avoid}body{background:#fff}.print-only{display:block!important}main{padding:0}}
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tempo">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 </head>
 <body>
 <header class="top"><b>🚕 Suivi Taxi</b><span id="status" role="status"></span></header>
@@ -631,6 +637,14 @@ $('wtAdd').onclick=()=>{const d=$('wtDate').value,h=ph($('wtHours').value);if(!d
 function renderAll(){_W=null;renderWt();renderHome();renderCal();renderReport();$('lastExport').textContent=data.meta.lastExport?'Dernière sauvegarde exportée : '+new Date(data.meta.lastExport).toLocaleString('fr-FR',{dateStyle:'long',timeStyle:'short'}):'Aucune sauvegarde exportée pour l’instant.';}
 $('wtDate').value=ymd(new Date());initSettings();renderAll();setStatus(true);
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('Service worker non enregistré', err));
+  });
+}
 </script>
 </body>
 </html>
