@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Suivi Taxi">
+<meta name="apple-mobile-web-app-title" content="Recap Taxi">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Recap Taxi</title>
 <script>try{var s=JSON.parse(localStorage.getItem('taxiSuivi_v2')).settings,r=document.documentElement;if(s){r.setAttribute('data-theme',s.theme||'auto');r.setAttribute('data-accent',s.accent||'taxi');r.setAttribute('data-size',s.textSize||'normal');r.setAttribute('data-font',s.font||'inter');}}catch(e){}</script>
@@ -294,7 +294,7 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
 </head>
 <body>
 <header class="top">
-  <div class="brandmark"><span class="logo" id="appLogo" aria-hidden="true">🚕</span><span id="appName">Suivi Taxi</span></div>
+  <div class="brandmark"><span class="logo" id="appLogo" aria-hidden="true">🚕</span><span id="appName">Recap Taxi</span></div>
   <span id="status" role="status"></span>
 </header>
 <main>
@@ -419,7 +419,7 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
 </div></details>
 
 <details class="acc" id="acc-look"><summary><span class="ic">🎨</span><span class="tt"><b>Apparence</b><small id="sum-look"></small></span></summary><div class="acc-body">
-  <div class="field"><label for="s_name">Nom de l’application</label><input type="text" id="s_name" maxlength="30" placeholder="Suivi Taxi" autocomplete="off"></div>
+  <div class="field"><label for="s_name">Nom de l’application</label><input type="text" id="s_name" maxlength="30" placeholder="Recap Taxi" autocomplete="off"></div>
   <div class="field"><label>Image (logo)</label>
     <div class="logorow"><span class="logo big" id="logoPrev">🚕</span><div class="actions" style="margin:0"><button type="button" class="btn sm" id="logoPick">📷 Choisir une photo</button><button type="button" class="btn sm" id="logoReset">Remettre 🚕</button></div></div>
     <input type="file" id="logoFile" accept="image/*" hidden>
@@ -560,7 +560,7 @@ const DEF={
   meals:1,mealMode:'manual',mealMin:6,mealSecond:0,payMeal:0,
   hireDate:'',cpMethod:'hire',cpAdj:0,cpRef:'',cpBal:0,cpAcc:2.5,cpMode:'ouvrables',cpAccrual:'month',
   payRate:0,payNight:0,majNight:0,majSun:0,majHol:0,ot2:39,ot3:43,majOt1:15,majOt2:25,majOt3:50,otQuota:220,goal:0,netPct:22,mutuelle:31.5,situation:'single',kids:0,isolated:false,pasMode:'auto',pasRate:0,otExempt:true,otCap:7500,
-  theme:'auto',accent:'taxi',textSize:'normal',font:'inter',custom:null,appName:'Suivi Taxi',logo:''
+  theme:'auto',accent:'taxi',textSize:'normal',font:'inter',custom:null,appName:'Recap Taxi',logo:''
 };
 const TYPES={work:'Travail',cp:'Congé payé',rp:'Repos payé',rest:'Repos',sick:'Arrêt maladie',ferie:'Férié (heures comptées)',note:'Note'};
 const TLAB={work:'Travail',cp:'CP',rp:'Repos payé',rest:'Repos',sick:'Arrêt',ferie:'Férié',note:'Note'};
@@ -922,7 +922,7 @@ function pdfReport(m){
   const clip=(s,n)=>{s=String(s);return s.length>n?s.slice(0,n-1)+'…':s;};
   const t=m.stats;
   newPage();
-  text(M,y+6,'SUIVI TAXI · RAPPORT D’HEURES',8,true,0.45);y+=26;
+  text(M,y+6,'RECAP TAXI · RAPPORT D’HEURES',8,true,0.45);y+=26;
   text(M,y,m.title,22,true);y+=18;
   if(m.sub){text(M,y,m.sub,11,false,0.35);y+=16;}
   text(M,y,'Édité le '+new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),9,false,0.5);y+=14;rule(y);y+=20;
@@ -1087,7 +1087,7 @@ function applyCustom(){
   r.style.setProperty('color-scheme',dark?'dark':'light');
   return{dark,surface:sf};
 }
-function brandName(){return(data.settings.appName||'').trim()||'Suivi Taxi';}
+function brandName(){return(data.settings.appName||'').trim()||'Recap Taxi';}
 function applyBrand(){
   const c=data.settings,n=brandName();
   $('appName').textContent=n;document.title=n;
