@@ -288,6 +288,7 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
 .mb.cur i{background:var(--brand)}
 .mb .mv{font-size:.66rem;font-weight:700;color:var(--muted);height:14px}
 .mb .ml{font-size:.62rem;color:var(--muted);margin-top:3px}
+.entry b{white-space:nowrap;margin-left:10px}
 
 </style>
 </head>
@@ -1430,12 +1431,14 @@ function weekCardHtml(k){
 function renderPay(t){
   const c=data.settings,rate=Number(c.payRate)||0;let h='<h2>💶 Estimation de paie</h2>';
   if(!t.hasPay){$('repPay').innerHTML=h+'<p class="muted" style="margin:0">Renseigne ton taux horaire dans Réglages → Estimation de paie pour obtenir une estimation.</p>';return;}
-  const lines=[['Heures payées ('+fmtH(t.paidMin)+')',(t.paidMin/60)*rate]];
-  const add=(lab,min,pct)=>{if(Number(pct)&&min)lines.push([lab+' (+'+pct+' %)',(min/60)*rate*pct/100]);};
+  const normal=Math.max(0,t.paidMin-t.ot1-t.ot2-t.ot3),pc=v=>Number(v)||0;
+  const lines=[['Heures normales (jusqu’à '+c.ot+' h par semaine) : '+fmtH(normal)+' × '+fmtEur(rate),(normal/60)*rate]];
   if(t.banked>0)lines.push(['Au-delà du seuil → cagnotte ('+fmtH(t.banked)+', non payées cette semaine)',0]);
-  add('Heures supp. '+c.ot+'–'+c.ot2+' h ('+fmtH(t.ot1)+')',t.ot1,c.majOt1);
-  add('Heures supp. '+c.ot2+'–'+c.ot3+' h ('+fmtH(t.ot2)+')',t.ot2,c.majOt2);
-  add('Heures supp. au-delà de '+c.ot3+' h ('+fmtH(t.ot3)+')',t.ot3,c.majOt3);
+  const tr=(lab,min,pct)=>{if(min>0)lines.push([lab+' : '+fmtH(min)+' × '+fmtEur(rate)+(pc(pct)?' + '+pc(pct)+' %':''),(min/60)*rate*(1+pc(pct)/100)]);};
+  tr('Heures de '+c.ot+' à '+c.ot2+' h',t.ot1,c.majOt1);
+  tr('Heures de '+c.ot2+' à '+c.ot3+' h',t.ot2,c.majOt2);
+  tr('Heures au-delà de '+c.ot3+' h',t.ot3,c.majOt3);
+  const add=(lab,min,pct)=>{if(Number(pct)&&min)lines.push([lab+' (+'+pct+' %)',(min/60)*rate*pct/100,pct]);};
   if(Number(c.payNight)&&t.night)lines.push(['Prime de nuit ('+fmtH(t.night)+')',(t.night/60)*c.payNight]);
   add('Nuit ('+fmtH(t.night)+')',t.night,c.majNight);
   add('Dimanche travaillé',t.sunMin,c.majSun);
@@ -1447,7 +1450,7 @@ function renderPay(t){
   if(n.mut)nl.push(['Mutuelle',-n.mut]);
   nl.push(['Net avant impôt',n.avant,1]);
   if(c.pasMode!=='none')nl.push(['Prélèvement à la source'+(c.pasMode==='manual'?' ('+(Number(c.pasRate)||0)+' %)':''),-n.tax]);
-  $('repPay').innerHTML=h+'<div class="bigline"><strong>'+fmtEur(n.net)+'</strong><span class="muted">net estimé'+(c.pasMode!=='none'?' après impôt':' avant impôt')+'</span></div><p class="hint" style="margin:0 0 8px">🚕 Selon la convention collective des taxis : heures supplémentaires majorées par paliers.</p>'+lines.map(l=>'<div class="entry"><span>'+esc(l[0])+'</span><b>'+fmtEur(l[1])+'</b></div>').join('')+'<h3>Du brut au net</h3>'+nl.map(l=>'<div class="entry"'+(l[2]?' style="font-weight:700"':'')+'><span>'+esc(l[0])+'</span><b>'+(l[1]<0?'− '+fmtEur(-l[1]):fmtEur(l[1]))+'</b></div>').join('')+(n.exempt>0?'<p class="hint">🧾 Heures supp. exonérées d’impôt : '+fmtEur(n.exempt)+' sur la période (plafond '+fmtEur(c.otCap)+' / an).</p>':'')+'<p class="hint">Tu es payé ce que tu fais dans la semaine, au maximum le seuil de la semaine (43 h par défaut, ou le seuil que tu as modifié). Le surplus va dans ta cagnotte.</p><p class="hint">Estimation indicative : l’impôt est calculé sur la période affichée ramenée à l’année (barème 2026, ta situation de famille). Ton taux réel figure sur ta fiche de paie ; mets-le en « taux personnalisé » pour être au plus juste. Hors primes.</p>';
+  $('repPay').innerHTML=h+'<div class="bigline"><strong>'+fmtEur(n.net)+'</strong><span class="muted">net estimé'+(c.pasMode!=='none'?' après impôt':' avant impôt')+'</span></div><p class="hint" style="margin:0 0 8px">🚕 Selon la convention collective des taxis : heures supplémentaires majorées par paliers.</p>'+lines.map(l=>'<div class="entry"><span>'+esc(l[0])+'</span><b>'+(l[2]!=null?'+ ':'')+fmtEur(l[1])+'</b></div>').join('')+'<h3>Du brut au net</h3>'+nl.map(l=>'<div class="entry"'+(l[2]?' style="font-weight:700"':'')+'><span>'+esc(l[0])+'</span><b>'+(l[1]<0?'− '+fmtEur(-l[1]):fmtEur(l[1]))+'</b></div>').join('')+(n.exempt>0?'<p class="hint">🧾 Heures supp. exonérées d’impôt : '+fmtEur(n.exempt)+' sur la période (plafond '+fmtEur(c.otCap)+' / an).</p>':'')+'<p class="hint">Tu es payé ce que tu fais dans la semaine, au maximum le seuil de la semaine (43 h par défaut, ou le seuil que tu as modifié). Le surplus va dans ta cagnotte.</p><p class="hint">Estimation indicative : l’impôt est calculé sur la période affichée ramenée à l’année (barème 2026, ta situation de famille). Ton taux réel figure sur ta fiche de paie ; mets-le en « taux personnalisé » pour être au plus juste. Hors primes.</p>';
 }
 function monthLong(y,m){return new Date(y,m,1,12).toLocaleDateString('fr-FR',{month:'long'});}
 function monthMin(y,m,lastDay){const a=y+'-'+pad(m+1)+'-01',e=new Date(y,m+1,0,12).getDate(),d=Math.min(lastDay||e,e),t=rangeStats(a,y+'-'+pad(m+1)+'-'+pad(d));return t.work+t.fer;}

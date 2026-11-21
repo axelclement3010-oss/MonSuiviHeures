@@ -1,6 +1,6 @@
 /* Suivi Taxi : fonctionnement hors connexion.
    Pour publier une nouvelle version de l'appli, change simplement le numéro ci-dessous. */
-const VERSION = 'suivi-taxi-v1';
+const VERSION = 'suivi-taxi-v2';
 const FICHIERS = [
   './',
   './index.html',
