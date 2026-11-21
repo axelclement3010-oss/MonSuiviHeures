@@ -1,0 +1,24 @@
+SUIVI TAXI - version installable
+=================================
+
+Contenu
+  index.html          l'application
+  manifest.json       informations d'installation (nom, icones, couleurs)
+  service-worker.js   fonctionnement hors connexion
+  icons/              icones (logo Taxi Lafargue)
+
+Comment l'utiliser
+  1. Mets TOUT le contenu de ce dossier en ligne, au meme endroit, sur un hebergement
+     en https (par exemple GitHub Pages, Netlify ou Cloudflare Pages, gratuits).
+     Ouvrir index.html directement depuis le telephone ne permet pas l'installation.
+  2. Ouvre l'adresse sur ton telephone :
+     - iPhone (Safari) : bouton Partager, puis "Sur l'ecran d'accueil".
+     - Android (Chrome) : menu, puis "Installer l'application".
+  3. Apres la premiere ouverture, l'appli marche sans connexion.
+
+Important
+  - Tes donnees restent sur ton telephone, propres a cette adresse. Si tu passes de l'ancien
+    fichier a cette version en ligne, fais Reglages > Sauvegarde > Exporter dans l'ancienne,
+    puis Importer dans la nouvelle.
+  - Pour mettre a jour l'appli : remplace index.html et change VERSION dans service-worker.js
+    (par exemple 'suivi-taxi-v2').
