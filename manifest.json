@@ -1,27 +1,38 @@
 {
-  "id": "./",
-  "name": "RecapTaxi - Taxi Lafargue",
-  "short_name": "RecapTaxi",
-  "description": "Application personnelle de suivi Taxi Lafargue",
-  "lang": "fr-FR",
-  "start_url": "./",
+  "name": "Suivi Taxi",
+  "short_name": "Suivi Taxi",
+  "description": "Suivi des heures de travail, cagnotte, congés payés et estimation de paie pour taxi salarié.",
+  "lang": "fr",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "./icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
