@@ -157,6 +157,17 @@ nav.tabs button.active{color:var(--brand-ink);background:var(--brand-soft)}
 .day.today .n{color:var(--brand-ink)}
 .wk{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.74rem;font-weight:800;background:var(--surface);border-radius:12px;border:1px dashed var(--line);text-align:center;color:var(--ink)}
 .wk small{font-size:.62rem;font-weight:700;color:var(--ok)}
+button.wk{font-family:inherit;cursor:pointer;padding:0;min-height:0;position:relative}
+.wk small.u{color:var(--t-ferie);background:var(--t-ferie-bg);border-radius:6px;padding:0 4px;margin-top:1px}
+.wk.used{border-style:solid;border-color:var(--t-ferie)}
+.wk.ok{border-style:solid;border-color:var(--ok)}
+.wk.ok::after{content:'✓';position:absolute;top:1px;right:3px;font-size:.6rem;color:var(--ok)}
+.wkrows .entry{padding:8px 0}
+.wkmsg{margin:12px 0;line-height:1.45}.wkmsg.ok{color:var(--ok);font-weight:600}
+.wkopts{display:grid;gap:8px;margin:8px 0}
+.wkopt{text-align:left;border:1.5px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:14px;padding:12px 14px;cursor:pointer;font-family:inherit}
+.wkopt b{display:block}.wkopt span{display:block;color:var(--muted);font-size:.85rem;margin-top:2px}
+.wkopt.on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.74rem;color:var(--muted);margin-top:14px}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:5px;vertical-align:-1px}
 .note-li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
@@ -281,6 +292,7 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
 .mb.cur i{background:var(--brand)}
 .mb .mv{font-size:.66rem;font-weight:700;color:var(--muted);height:14px}
 .mb .ml{font-size:.62rem;color:var(--muted);margin-top:3px}
+.entry b{white-space:nowrap;margin-left:10px}
 
 </style>
 </head>
@@ -317,7 +329,7 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
     <div class="actions" style="margin:0 0 12px"><button class="btn sm" id="calToday">Aujourd’hui</button><button class="btn sm" id="calNote">💬 Ajouter une note</button><button class="btn sm" id="calLeave">🏖️ Congés / repos</button></div>
     <div class="cal" id="calGrid"></div>
     <div class="legend"><span><i style="background:var(--t-work-bg)"></i>Travail</span><span><i style="background:var(--t-cp-bg)"></i>CP</span><span><i style="background:var(--t-rp-bg)"></i>Repos payé</span><span><i style="background:var(--t-rest-bg)"></i>Repos</span><span><i style="background:var(--t-ferie-bg)"></i>Férié compté</span><span><i style="background:var(--t-sick-bg)"></i>Arrêt</span><span>🌙 nuit · 💬 note · ⏰ changement d’heure · ● férié</span></div>
-    <p class="hint">Touche un jour pour le saisir. La colonne « Sem. » donne le total de la semaine, et en vert ce qui part dans la cagnotte.</p>
+    <p class="hint">Touche un jour pour le saisir. La colonne « Sem. » donne le total de la semaine : en vert ce qui part dans la cagnotte, en orange <b>−</b> ce que tu en utilises pour compléter. Touche-la pour valider la semaine.</p>
     <div id="calSpecial" class="hint"></div>
   </div>
   <div class="card"><h2>💬 Notes du mois</h2><div id="calNotes"></div></div>
@@ -511,6 +523,11 @@ details.acc[open] summary::after{transform:rotate(-135deg)}
 </div></div>
 
 <!-- ============ NOTE SEULE ============ -->
+<div class="backdrop" id="weekSheet"><div class="sheet" role="dialog" aria-modal="true" aria-label="Valider la semaine">
+  <div class="sheet-head"><h2 id="wkTitle">Semaine</h2><button type="button" class="icon" id="wkClose" aria-label="Fermer">✕</button></div>
+  <div id="wkBody"></div>
+</div></div>
+
 <div class="backdrop" id="noteSheet"><div class="sheet" role="dialog" aria-modal="true" aria-label="Note du calendrier">
   <div class="sheet-head"><h2>Note du calendrier</h2><button type="button" class="icon" id="nClose" aria-label="Fermer">✕</button></div>
   <div class="field"><label for="nDate">Date</label><input type="date" id="nDate"><p class="hint" id="nHint"></p></div>
@@ -593,7 +610,8 @@ const dstLabel=s=>yearInfo(+s.slice(0,4)).dst[s]||'';
 /* ---------- données ---------- */
 function normalize(d){
   d=d||{};
-  const o={version:3,days:d.days||{},choices:d.choices||{},weekThr:d.weekThr||{},notes:d.notes||{},trash:d.trash||[],deleted:d.deleted||{},live:d.live||null,settings:{...DEF,...(d.settings||{})},meta:d.meta||{}};
+  const o={version:3,days:d.days||{},choices:d.choices||{},valid:d.valid||{},weekThr:d.weekThr||{},notes:d.notes||{},trash:d.trash||[],deleted:d.deleted||{},live:d.live||null,settings:{...DEF,...(d.settings||{})},meta:d.meta||{}};
+  Object.keys(o.valid).forEach(k=>{if(o.valid[k]!==true)delete o.valid[k];});
   Object.entries(o.days).forEach(([k,v])=>{if(v&&typeof v==='object'){if(v.note){if(!o.notes[k])o.notes[k]={t:String(v.note),u:v.u||0};}delete v.note;}else delete o.days[k];});
   Object.entries(o.notes).forEach(([k,v])=>{if(typeof v==='string')o.notes[k]={t:v,u:0};else if(!v||typeof v!=='object')delete o.notes[k];});
   return o;
@@ -647,11 +665,11 @@ function computeWeeks(){
     let work=0,night=0,meals=0,recup=0,wd=0,fer=0;
     (byWeek[k]||[]).forEach(dt=>{const d=data.days[dt];if(d.type==='work'){work+=d.min||0;night+=d.night||0;meals+=d.meals||0;wd++;}fer+=ferMinOf(d);recup+=Math.round((d.recup||0)*60);});
     const tot=work+(cfg.ferieCounts?fer:0);
-    const thr=thrMin(k),completed=addDays(k,6)<today,surplus=Math.max(0,tot-thr);bal+=surplus;
+    const thr=thrMin(k),completed=addDays(k,6)<today||data.valid[k]===true,surplus=Math.max(0,tot-thr);bal+=surplus;
     const choice=data.choices[k]||cfg.comp,canComp=completed&&tot>0&&tot<thr;let used=0;
     if(canComp&&choice==='compensate'){used=Math.min(bal,thr-tot);bal-=used;}
     const rec=Math.min(bal,recup),short=recup-rec;bal-=rec;
-    const w={key:k,thr,work,fer,tot,night,meals,surplus,used,recup,short,canComp,choice,completed,bal,wd};list.push(w);map[k]=w;
+    const w={key:k,thr,work,fer,tot,night,meals,surplus,used,recup,short,canComp,choice,completed,valid:data.valid[k]===true,bal,wd};list.push(w);map[k]=w;
   }
   return{list,map};
 }
@@ -693,12 +711,30 @@ function rangeStats(from,to){
   });
   const T1=Math.round(cfg.ot*60),T2=Math.max(T1,Math.round((Number(cfg.ot2)||0)*60)),T3=Math.max(T2,Math.round((Number(cfg.ot3)||0)*60));
   const tier=(p,q,a,b)=>Math.max(0,Math.min(q,b)-Math.max(p,a));
-  for(let k=weekKey(from);k<=to;k=addDays(k,7)){let run=0;for(let i=0;i<7;i++){const dt=addDays(k,i),d=data.days[dt];let m=0;if(d){if(d.type==='work')m=d.min||0;else if(d.type==='ferie'&&cfg.ferieCounts)m=ferMinOf(d);}const prev=run;run+=m;if(dt>=from&&dt<=to){r.otMin+=tier(prev,run,T1,1e9);r.ot1+=tier(prev,run,T1,T2);r.ot2+=tier(prev,run,T2,T3);r.ot3+=tier(prev,run,T3,1e9);}}}
+  /* Paie : on est payé ce qu'on fait dans la semaine, plafonné au seuil de la semaine (43 h ou seuil modifié).
+     Le surplus va dans la cagnotte (non payé cette semaine). Heures de cagnotte reprises : payées au taux normal. */
+  r.paidMin=0;r.banked=0;r.ot1=r.ot2=r.ot3=r.otMin=0;
+  for(let k=weekKey(from);k<=to;k=addDays(k,7)){
+    const we=W().map[k],thr=thrMin(k);let run=0,paid=0;
+    for(let i=0;i<7;i++){
+      const dt=addDays(k,i),d=data.days[dt];let m=0;
+      if(d){m=(d.type==='work'?(d.min||0):0)+(cfg.ferieCounts?ferMinOf(d):0);}
+      const prev=Math.min(run,thr);run+=m;const pr=Math.min(run,thr),pm=pr-prev;paid=pr;
+      if(dt>=from&&dt<=to){r.paidMin+=pm;r.banked+=m-pm;r.ot1+=tier(prev,pr,T1,T2);r.ot2+=tier(prev,pr,T2,T3);r.ot3+=tier(prev,pr,T3,1e9);
+        if(d&&!cfg.ferieCounts)r.paidMin+=ferMinOf(d);}
+    }
+    const sun=addDays(k,6);
+    if(we&&sun>=from&&sun<=to){
+      if(we.used){r.paidMin+=we.used;r.ot1+=tier(paid,paid+we.used,T1,T2);r.ot2+=tier(paid,paid+we.used,T2,T3);r.ot3+=tier(paid,paid+we.used,T3,1e9);}
+      const rec=Math.max(0,(we.recup||0)-(we.short||0));if(rec)r.paidMin+=rec;
+    }
+  }
+  r.otMin=r.ot1+r.ot2+r.ot3;
   r.avg=r.wd?r.work/r.wd:0;
   r.mealAmt=r.meals*(Number(cfg.payMeal)||0);
   const rate=Number(cfg.payRate)||0;
   const P=v=>Number(v)||0;
-  r.pay=((r.work+r.fer)/60)*rate+r.mealAmt+(r.night/60)*P(cfg.payNight)+(r.night/60)*rate*P(cfg.majNight)/100+(r.sunMin/60)*rate*P(cfg.majSun)/100+(r.holMin/60)*rate*P(cfg.majHol)/100+(r.ot1/60)*rate*P(cfg.majOt1)/100+(r.ot2/60)*rate*P(cfg.majOt2)/100+(r.ot3/60)*rate*P(cfg.majOt3)/100;
+  r.pay=(r.paidMin/60)*rate+r.mealAmt+(r.night/60)*P(cfg.payNight)+(r.night/60)*rate*P(cfg.majNight)/100+(r.sunMin/60)*rate*P(cfg.majSun)/100+(r.holMin/60)*rate*P(cfg.majHol)/100+(r.ot1/60)*rate*P(cfg.majOt1)/100+(r.ot2/60)*rate*P(cfg.majOt2)/100+(r.ot3/60)*rate*P(cfg.majOt3)/100;
   const rt=rate/60;r.otPay=r.otMin*rt+r.ot1*rt*P(cfg.majOt1)/100+r.ot2*rt*P(cfg.majOt2)/100+r.ot3*rt*P(cfg.majOt3)/100;
   r.span=Math.max(1,Math.round((pd(to)-pd(from))/864e5)+1);
   r.hasPay=!!(rate||cfg.payMeal||cfg.payNight);
@@ -736,6 +772,7 @@ function mergeData(a,b){
   new Set([...Object.keys(a.notes),...Object.keys(b.notes)]).forEach(k=>{const x=a.notes[k],y=b.notes[k];out.notes[k]=x&&y?(ts(y)>ts(x)?y:x):(x||y);});
   out.deleted=del;
   out.choices=bNewer?{...a.choices,...b.choices}:{...b.choices,...a.choices};
+  out.valid=bNewer?{...a.valid,...b.valid}:{...b.valid,...a.valid};
   out.weekThr=bNewer?{...a.weekThr,...b.weekThr}:{...b.weekThr,...a.weekThr};
   if(bNewer)out.settings={...DEF,...b.settings};
   const seen=new Set(out.trash.map(t=>t.id));b.trash.forEach(t=>{if(!seen.has(t.id))out.trash.push(t);});
@@ -1227,6 +1264,37 @@ function openNote(date,preset){
 }
 $('nDate').addEventListener('change',()=>{const d=$('nDate').value;if(!d)return;$('nText').value=noteOf(d);$('nHint').textContent=longDate(d);$('nDelete').classList.toggle('hidden',!noteOf(d));});
 $('nClose').addEventListener('click',closeSheets);
+/* ---------- valider une semaine (calendrier) ---------- */
+let wkOpen=null,wkChoice='keep';
+function openWeek(k){
+  wkOpen=k;const w=weekEntry(k);wkChoice=data.choices[k]||data.settings.comp||'keep';
+  $('wkTitle').textContent='Semaine '+isoWeek(k)+' · '+dayMonth(k)+' → '+dayMonth(addDays(k,6));
+  renderWeekSheet();openSheet('weekSheet');
+}
+function renderWeekSheet(){
+  const k=wkOpen,w=weekEntry(k),avail=balBefore(k),miss=Math.max(0,w.thr-w.tot);
+  const rows=[['Heures faites',fmtH(w.tot)],['Seuil de la semaine',fmtH(w.thr)]];
+  let h='<div class="wkrows">'+rows.map(r=>'<div class="entry"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'</div>';
+  if(!w.tot){h+='<p class="muted">Aucune heure saisie cette semaine.</p>';}
+  else if(w.tot>=w.thr){
+    h+='<p class="wkmsg ok">✅ Semaine complète.'+(w.surplus?' <b>+'+fmtH(w.surplus)+'</b> vont dans ta cagnotte.':'')+'</p>';
+  }else{
+    const use=Math.min(avail,miss),pay=w.tot+(wkChoice==='compensate'?use:0);
+    h+='<p class="wkmsg">Il manque <b>'+fmtH(miss)+'</b> pour atteindre '+fmtH(w.thr)+'. Cagnotte disponible : <b>'+fmtH(avail)+'</b>.</p>'
+      +'<div class="wkopts" role="radiogroup" aria-label="Compléter la semaine">'
+      +'<button type="button" class="wkopt'+(wkChoice==='compensate'?' on':'')+'" data-c="compensate" role="radio" aria-checked="'+(wkChoice==='compensate')+'"><b>Compléter avec la cagnotte</b><span>'+(avail>0?'− '+fmtH(use)+' de cagnotte → payé '+fmtH(w.tot+use)+(use<miss?' (cagnotte insuffisante)':''):'Cagnotte vide : rien à utiliser')+'</span></button>'
+      +'<button type="button" class="wkopt'+(wkChoice==='keep'?' on':'')+'" data-c="keep" role="radio" aria-checked="'+(wkChoice==='keep')+'"><b>Garder mes heures</b><span>Payé '+fmtH(w.tot)+', la cagnotte ne bouge pas</span></button></div>';
+  }
+  h+='<div class="actions" style="margin-top:14px"><button type="button" class="btn primary" id="wkOk">'+(w.valid?'Mettre à jour la validation':'✔ Valider la semaine')+'</button>'+(w.valid?'<button type="button" class="btn" id="wkUn">Annuler la validation</button>':'')+'</div>'
+    +'<p class="hint">'+(w.valid?'Semaine validée : ton choix est enregistré.':'Une semaine non validée est calculée avec ton réglage par défaut une fois terminée.')+'</p>';
+  $('wkBody').innerHTML=h;
+}
+$('wkBody').addEventListener('click',e=>{
+  const o=e.target.closest('.wkopt');if(o){wkChoice=o.dataset.c;renderWeekSheet();return;}
+  if(e.target.closest('#wkOk')){const w=weekEntry(wkOpen);if(w.tot&&w.tot<w.thr)data.choices[wkOpen]=wkChoice;data.valid[wkOpen]=true;save();closeSheets();renderAll();toast('Semaine validée ✓');return;}
+  if(e.target.closest('#wkUn')){delete data.valid[wkOpen];save();closeSheets();renderAll();toast('Validation annulée');}
+});
+$('wkClose').addEventListener('click',closeSheets);
 $('nSave').addEventListener('click',()=>{const d=$('nDate').value;if(!d){alert('Choisis une date.');return;}setNote(d,$('nText').value.trim());save();closeSheets();renderAll();toast('Note enregistrée ✓');});
 $('nDelete').addEventListener('click',()=>{const d=$('nDate').value;ask('Supprimer cette note ?',()=>{setNote(d,'');save();closeSheets();renderAll();toast('Note supprimée');},null,{danger:true,yes:'Supprimer'});});
 $('calNote').addEventListener('click',()=>openNote(ymd(new Date())));
@@ -1350,7 +1418,10 @@ function renderCal(){
       c.setAttribute('aria-label',longDate(ds)+(d?' : '+TYPES[d.type]:'')+(noteOf(ds)?' (note)':''));
       c.onclick=()=>openEditor(ds);grid.append(c);
     }
-    const w=W().map[k],s=document.createElement('div');s.className='wk';s.innerHTML=(w&&w.tot?fmtShort(w.tot):'–')+(w&&w.surplus?'<small>+'+fmtShort(w.surplus)+'</small>':'');grid.append(s);
+    const w=W().map[k],s=document.createElement('button');s.type='button';s.className='wk'+(w&&w.valid?' ok':'')+(w&&w.used?' used':'');
+    s.innerHTML=(w&&w.tot?fmtShort(w.tot):'–')+(w&&w.used?'<small class="u">−'+fmtShort(w.used)+'</small>':(w&&w.surplus?'<small>+'+fmtShort(w.surplus)+'</small>':''));
+    s.setAttribute('aria-label','Semaine '+isoWeek(k)+(w&&w.tot?' : '+fmtH(w.tot):'')+(w&&w.valid?', validée':'')+'. Toucher pour valider la semaine');
+    s.onclick=()=>openWeek(k);grid.append(s);
   }
   const sp=[];for(let d=first;d<=last;d=addDays(d,1)){const h=holiday(d),dl=dstLabel(d);if(h)sp.push('<b>'+(+d.slice(8))+'</b> '+esc(h));if(dl)sp.push('⏰ <b>'+(+d.slice(8))+'</b> '+esc(dl.replace(/ \(.*\)/,'')));}
   $('calSpecial').innerHTML=sp.length?'Ce mois-ci : '+sp.join(' · '):'';
@@ -1405,11 +1476,14 @@ function weekCardHtml(k){
 function renderPay(t){
   const c=data.settings,rate=Number(c.payRate)||0;let h='<h2>💶 Estimation de paie</h2>';
   if(!t.hasPay){$('repPay').innerHTML=h+'<p class="muted" style="margin:0">Renseigne ton taux horaire dans Réglages → Estimation de paie pour obtenir une estimation.</p>';return;}
-  const lines=[['Heures payées ('+fmtH(t.work+t.fer)+')',((t.work+t.fer)/60)*rate]];
-  const add=(lab,min,pct)=>{if(Number(pct)&&min)lines.push([lab+' (+'+pct+' %)',(min/60)*rate*pct/100]);};
-  add('Heures supp. '+c.ot+'–'+c.ot2+' h ('+fmtH(t.ot1)+')',t.ot1,c.majOt1);
-  add('Heures supp. '+c.ot2+'–'+c.ot3+' h ('+fmtH(t.ot2)+')',t.ot2,c.majOt2);
-  add('Heures supp. au-delà de '+c.ot3+' h ('+fmtH(t.ot3)+')',t.ot3,c.majOt3);
+  const normal=Math.max(0,t.paidMin-t.ot1-t.ot2-t.ot3),pc=v=>Number(v)||0;
+  const lines=[['Heures normales (jusqu’à '+c.ot+' h par semaine) : '+fmtH(normal)+' × '+fmtEur(rate),(normal/60)*rate]];
+  if(t.banked>0)lines.push(['Au-delà du seuil → cagnotte ('+fmtH(t.banked)+', non payées cette semaine)',0]);
+  const tr=(lab,min,pct)=>{if(min>0)lines.push([lab+' : '+fmtH(min)+' × '+fmtEur(rate)+(pc(pct)?' + '+pc(pct)+' %':''),(min/60)*rate*(1+pc(pct)/100)]);};
+  tr('Heures de '+c.ot+' à '+c.ot2+' h',t.ot1,c.majOt1);
+  tr('Heures de '+c.ot2+' à '+c.ot3+' h',t.ot2,c.majOt2);
+  tr('Heures au-delà de '+c.ot3+' h',t.ot3,c.majOt3);
+  const add=(lab,min,pct)=>{if(Number(pct)&&min)lines.push([lab+' (+'+pct+' %)',(min/60)*rate*pct/100,pct]);};
   if(Number(c.payNight)&&t.night)lines.push(['Prime de nuit ('+fmtH(t.night)+')',(t.night/60)*c.payNight]);
   add('Nuit ('+fmtH(t.night)+')',t.night,c.majNight);
   add('Dimanche travaillé',t.sunMin,c.majSun);
@@ -1421,7 +1495,7 @@ function renderPay(t){
   if(n.mut)nl.push(['Mutuelle',-n.mut]);
   nl.push(['Net avant impôt',n.avant,1]);
   if(c.pasMode!=='none')nl.push(['Prélèvement à la source'+(c.pasMode==='manual'?' ('+(Number(c.pasRate)||0)+' %)':''),-n.tax]);
-  $('repPay').innerHTML=h+'<div class="bigline"><strong>'+fmtEur(n.net)+'</strong><span class="muted">net estimé'+(c.pasMode!=='none'?' après impôt':' avant impôt')+'</span></div><p class="hint" style="margin:0 0 8px">🚕 Selon la convention collective des taxis : heures supplémentaires majorées par paliers.</p>'+lines.map(l=>'<div class="entry"><span>'+esc(l[0])+'</span><b>'+fmtEur(l[1])+'</b></div>').join('')+'<h3>Du brut au net</h3>'+nl.map(l=>'<div class="entry"'+(l[2]?' style="font-weight:700"':'')+'><span>'+esc(l[0])+'</span><b>'+(l[1]<0?'− '+fmtEur(-l[1]):fmtEur(l[1]))+'</b></div>').join('')+(n.exempt>0?'<p class="hint">🧾 Heures supp. exonérées d’impôt : '+fmtEur(n.exempt)+' sur la période (plafond '+fmtEur(c.otCap)+' / an).</p>':'')+'<p class="hint">Estimation indicative : l’impôt est calculé sur la période affichée ramenée à l’année (barème 2026, ta situation de famille). Ton taux réel figure sur ta fiche de paie ; mets-le en « taux personnalisé » pour être au plus juste. Hors primes.</p>';
+  $('repPay').innerHTML=h+'<div class="bigline"><strong>'+fmtEur(n.net)+'</strong><span class="muted">net estimé'+(c.pasMode!=='none'?' après impôt':' avant impôt')+'</span></div><p class="hint" style="margin:0 0 8px">🚕 Selon la convention collective des taxis : heures supplémentaires majorées par paliers.</p>'+lines.map(l=>'<div class="entry"><span>'+esc(l[0])+'</span><b>'+(l[2]!=null?'+ ':'')+fmtEur(l[1])+'</b></div>').join('')+'<h3>Du brut au net</h3>'+nl.map(l=>'<div class="entry"'+(l[2]?' style="font-weight:700"':'')+'><span>'+esc(l[0])+'</span><b>'+(l[1]<0?'− '+fmtEur(-l[1]):fmtEur(l[1]))+'</b></div>').join('')+(n.exempt>0?'<p class="hint">🧾 Heures supp. exonérées d’impôt : '+fmtEur(n.exempt)+' sur la période (plafond '+fmtEur(c.otCap)+' / an).</p>':'')+'<p class="hint">Tu es payé ce que tu fais dans la semaine, au maximum le seuil de la semaine (43 h par défaut, ou le seuil que tu as modifié). Le surplus va dans ta cagnotte.</p><p class="hint">Estimation indicative : l’impôt est calculé sur la période affichée ramenée à l’année (barème 2026, ta situation de famille). Ton taux réel figure sur ta fiche de paie ; mets-le en « taux personnalisé » pour être au plus juste. Hors primes.</p>';
 }
 function monthLong(y,m){return new Date(y,m,1,12).toLocaleDateString('fr-FR',{month:'long'});}
 function monthMin(y,m,lastDay){const a=y+'-'+pad(m+1)+'-01',e=new Date(y,m+1,0,12).getDate(),d=Math.min(lastDay||e,e),t=rangeStats(a,y+'-'+pad(m+1)+'-'+pad(d));return t.work+t.fer;}

@@ -1,6 +1,6 @@
 {
-  "name": "RecapTaxi",
-  "short_name": "RecapTaxi",
+  "name": "Suivi Taxi",
+  "short_name": "Suivi Taxi",
   "description": "Suivi des heures de travail, cagnotte, congés payés et estimation de paie pour taxi salarié.",
   "lang": "fr",
   "start_url": "./index.html",
